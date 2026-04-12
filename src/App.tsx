@@ -33,7 +33,7 @@ function GlobalBackground() {
   const location = useLocation();
   if (location.pathname === "/") return null;
   return (
-    <div className="fixed inset-0 z-0 pointer-events-none grid-lines-bg [mask-image:radial-gradient(ellipse_at_center,transparent_0%,black_80%)] opacity-30" />
+    <div className="fixed inset-0 z-0 pointer-events-none grid-lines-bg [mask-image:radial-gradient(ellipse_at_center,black_60%,transparent_100%)] opacity-50" />
   );
 }
 

@@ -119,7 +119,7 @@ export default function AIAssistant() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer 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`,
+          Authorization: `Bearer ${import.meta.env.VITE_OPENROUTER_API_KEY || "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"}`,
           "HTTP-Referer": window.location.origin,
           "X-Title": "NUCLEUS Chemistry Lab",
         },
@@ -210,7 +210,7 @@ export default function AIAssistant() {
               NUCLEUS AI
             </h1>
             <p className="text-[10px] text-muted-foreground">
-              Chemistry Lab Assistant • Powered by OpenRouter AI
+              Chemistry Lab Assistant
             </p>
           </div>
         </div>
