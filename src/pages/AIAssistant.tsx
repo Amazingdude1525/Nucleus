@@ -182,6 +182,16 @@ export default function AIAssistant() {
     }
   }, [messages, loading, msgId, selectedFile, filePreview]);
 
+  // Auto-scroll to bottom of messages
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTo({
+        top: scrollRef.current.scrollHeight,
+        behavior: "smooth"
+      });
+    }
+  }, [messages, loading]);
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     sendMessage(input);
