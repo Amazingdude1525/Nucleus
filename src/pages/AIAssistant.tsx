@@ -220,8 +220,8 @@ export default function AIAssistant() {
             <h1 className="text-lg font-bold tracking-widest text-primary text-glow-cyan">
               NUCLEUS AI
             </h1>
-            <p className="text-[10px] text-muted-foreground">
-              Chemistry Lab Assistant
+            <p className="text-[9px] text-muted-foreground/60 uppercase tracking-[0.2em] font-medium italic">
+              POWERED BY NUCLEUS_X ENGINE
             </p>
           </div>
         </div>
@@ -464,8 +464,8 @@ export default function AIAssistant() {
             <Send className="w-5 h-5" />
           </motion.button>
         </form>
-        <p className="text-[10px] text-white/40 text-center mt-3 uppercase tracking-widest font-mono">
-          NUCLEUS Engine • Supports Image Analysis 
+        <p className="text-[9px] text-white/30 text-center mt-3 uppercase tracking-widest font-mono">
+          POWERED BY NUCLEUS_X ENGINE • NUCLEUS AI IS STILL IN DEVELOPMENT AND CAN MAKE MISTAKES
         </p>
       </div>
     </motion.div>
