@@ -116,7 +116,7 @@ export default function AIAssistant() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${import.meta.env.VITE_OPENROUTER_API_KEY || "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"}`,
+          Authorization: `Bearer ${import.meta.env.VITE_OPENROUTER_API_KEY || ""}`,
           "HTTP-Referer": window.location.origin,
           "X-Title": "NUCLEUS Chemistry Lab",
         },
