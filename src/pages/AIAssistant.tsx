@@ -94,8 +94,8 @@ export default function AIAssistant() {
     removeFile();
 
     try {
-      const userName = localStorage.getItem("nucleus-user-name") || "Buddy";
-      const actualSystemPrompt = `${SYSTEM_PROMPT}\n\nThe user you are talking to is named "${userName}". Address them correctly when greeting or summarizing!`;
+      const currentDate = new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+      const actualSystemPrompt = `${SYSTEM_PROMPT}\n\nThe user you are talking to is named "${userName}". Address them correctly when greeting or summarizing!\n\nCurrent System Time: ${currentDate}`;
 
       // Construct content with image if present
       let userContent: any = text.trim();
