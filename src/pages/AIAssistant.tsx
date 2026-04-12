@@ -115,15 +115,11 @@ export default function AIAssistant() {
         { role: "user" as const, content: userContent },
       ];
 
-      // Obfuscated key to bypass GitHub auto-revoke bots
-      const p1 = "sk-or-v1-";
-      const p2 = "225f21e09d4c019593825b9a5a4718e81d3b531502c89e12a5c5bdbda5e99683";
-      
       const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${import.meta.env.VITE_OPENROUTER_API_KEY || (p1 + p2)}`,
+          Authorization: `Bearer ${import.meta.env.VITE_OPENROUTER_API_KEY}`,
           "HTTP-Referer": window.location.origin,
           "X-Title": "NUCLEUS Chemistry Lab",
         },
