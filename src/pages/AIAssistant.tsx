@@ -147,7 +147,7 @@ export default function AIAssistant() {
 
       setMessages((prev) => [...prev, aiMsg]);
     } catch (err: any) {
-      console.warn("API Error:", err);
+      console.warn("API Error intercepted:", err.message || err);
       // Fallback local robust chemistry responder
       const q = text.toLowerCase();
       let fallbackContent = "⚠️ I'm operating in **Local Offline Mode** due to an API connectivity issue. However, I can still help you with standard chemistry questions!\n\n";
