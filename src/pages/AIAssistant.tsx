@@ -119,7 +119,7 @@ export default function AIAssistant() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${import.meta.env.VITE_OPENROUTER_API_KEY || "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"}`,
+          Authorization: `Bearer ${import.meta.env.VITE_OPENROUTER_API_KEY || "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"}`,
           "HTTP-Referer": window.location.origin,
           "X-Title": "NUCLEUS Chemistry Lab",
         },
@@ -132,6 +132,7 @@ export default function AIAssistant() {
 
       if (!res.ok) {
         const errData = await res.json().catch(() => null);
+        console.error("OpenAI/OpenRouter Reject Payload:", errData);
         throw new Error(errData?.error?.message || `API error: ${res.status}`);
       }
 
