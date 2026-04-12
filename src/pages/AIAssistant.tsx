@@ -64,7 +64,7 @@ export default function AIAssistant() {
         reader.onloadend = () => setFilePreview(reader.result as string);
         reader.readAsDataURL(file);
       } else {
-        setFilePreview(null); // For non-image files like PDFs
+        setFilePreview(null);
       }
     }
   };
@@ -420,7 +420,7 @@ export default function AIAssistant() {
             type="file" 
             ref={fileInputRef} 
             onChange={handleFileSelect} 
-            accept="image/*,.pdf" 
+            accept="image/*" 
             className="hidden" 
           />
           
@@ -439,7 +439,7 @@ export default function AIAssistant() {
           <input
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder={selectedFile ? "Add a message about this file..." : "Ask or upload a photo of your problem..."}
+            placeholder={selectedFile ? "Add a message about this image..." : "Ask or upload a photo of your problem..."}
             disabled={loading}
             className="flex-1 px-5 py-4 rounded-xl glass border border-[#00F0FF]/40 text-sm text-white bg-black/50 focus:outline-none focus:border-[#00F0FF] placeholder:text-white/30 transition-all disabled:opacity-50 relative z-10 shadow-[inner_0_0_10px_#00F0FF11]"
           />
@@ -455,7 +455,7 @@ export default function AIAssistant() {
           </motion.button>
         </form>
         <p className="text-[10px] text-white/40 text-center mt-3 uppercase tracking-widest font-mono">
-          NUCLEUS Engine • Supports Image/PDF Analysis 
+          NUCLEUS Engine • Supports Image Analysis 
         </p>
       </div>
     </motion.div>
