@@ -122,18 +122,22 @@ export default function AIAssistant() {
           "Content-Type": "application/json",
           Authorization: `Bearer ${import.meta.env.VITE_OPENROUTER_API_KEY}`,
           "HTTP-Referer": window.location.origin,
-          "X-Title": "NUCLEUS Chemistry Lab",
+          "X-Title": "NUCLEUS",
         },
         body: JSON.stringify({
-          model: "openrouter/free",
+          model: "google/gemini-flash-1.5:free",
           messages: apiMessages,
           temperature: 0.7,
         }),
       });
 
       if (!res.ok) {
-        const errData = await res.json().catch(() => null);
-        console.error("OpenAI/OpenRouter Reject Payload:", errData);
+        const errData = await res.json().catch(() => ({ error: { message: "Internal API Error" } }));
+        console.error("Connectivity Failure Diagnostic:", {
+          status: res.status,
+          error: errData,
+          keyPresent: !!import.meta.env.VITE_OPENROUTER_API_KEY
+        });
         throw new Error(errData?.error?.message || `API error: ${res.status}`);
       }
 
