@@ -115,13 +115,16 @@ export default function AIAssistant() {
         { role: "user" as const, content: userContent },
       ];
 
-      const res = await fetch("https://text.pollinations.ai/openai", {
+      const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          Authorization: `Bearer ${import.meta.env.VITE_OPENROUTER_API_KEY}`,
+          "HTTP-Referer": window.location.origin,
+          "X-Title": "NUCLEUS Chemistry Lab",
         },
         body: JSON.stringify({
-          model: "openai",
+          model: "openrouter/free",
           messages: apiMessages,
           temperature: 0.7,
         }),
