@@ -122,7 +122,7 @@ export default function AIAssistant() {
           "X-Title": "NUCLEUS Chemistry Lab",
         },
         body: JSON.stringify({
-          model: "meta-llama/llama-3.3-70b-instruct:free",
+          model: "openrouter/free",
           messages: apiMessages,
           temperature: 0.7,
         }),
