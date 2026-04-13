@@ -19,6 +19,7 @@ const GESTURE_DISPLAY: Record<GestureType, { emoji: string; label: string }> = {
 interface CameraPreviewProps {
   isActive: boolean;
   videoRef: React.RefObject<HTMLVideoElement>;
+  stream: MediaStream | null;
   gesture: GestureType;
   confidence: number;
   handDetected: boolean;
@@ -33,6 +34,7 @@ interface CameraPreviewProps {
 export default function CameraPreview({
   isActive,
   videoRef,
+  stream,
   gesture,
   confidence,
   handDetected,
@@ -152,12 +154,13 @@ export default function CameraPreview({
   // ── Mirror video feed into internal canvas-like display ──
   const internalVideoRef = useRef<HTMLVideoElement>(null);
   useEffect(() => {
-    if (isActive && internalVideoRef.current && videoRef.current) {
-      // Share the same stream
-      internalVideoRef.current.srcObject = videoRef.current.srcObject;
-      internalVideoRef.current.play().catch(() => {});
+    if (isActive && internalVideoRef.current && stream) {
+      if (internalVideoRef.current.srcObject !== stream) {
+        internalVideoRef.current.srcObject = stream;
+        internalVideoRef.current.play().catch(() => {});
+      }
     }
-  }, [isActive, videoRef]);
+  }, [isActive, stream]);
 
   // Status dot color
   const statusColor = handDetected ? "#22cc44" : isActive ? "#eab308" : "#ef4444";

@@ -16,6 +16,7 @@ interface HandTrackingContextValue {
   isPinching: boolean;
   confidence: number;
   handDetected: boolean;
+  stream: MediaStream | null;
   activate: () => Promise<void>;
   deactivate: () => void;
   showOnboarding: () => void;
@@ -111,6 +112,7 @@ export default function HandTrackingProvider({ children }: HandTrackingProviderP
     isPinching: tracking.isPinching,
     confidence: tracking.confidence,
     handDetected: tracking.handDetected,
+    stream: tracking.stream,
     activate: tracking.activate,
     deactivate: tracking.deactivate,
     showOnboarding,
@@ -145,6 +147,7 @@ export default function HandTrackingProvider({ children }: HandTrackingProviderP
             <CameraPreview
               isActive={tracking.isActive}
               videoRef={tracking.videoRef}
+              stream={tracking.stream}
               gesture={tracking.gesture}
               confidence={tracking.confidence}
               handDetected={tracking.handDetected}

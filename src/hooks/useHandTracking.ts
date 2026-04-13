@@ -34,10 +34,10 @@ const MODEL_URL =
 const WASM_CDN = "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm";
 
 /** Size of circular buffer for smoothing */
-const SMOOTH_BUFFER_SIZE = 8;
+const SMOOTH_BUFFER_SIZE = 4;
 
 /** Minimum pixel movement to register (dead zone) */
-const DEAD_ZONE_PX = 3;
+const DEAD_ZONE_PX = 1;
 
 /** Pinch distance threshold (normalized coordinates) */
 const PINCH_THRESHOLD = 0.06;
@@ -206,6 +206,7 @@ export function useHandTracking(): UseHandTrackingReturn {
     error: null,
     handDetected: false,
     fps: 0,
+    stream: null as MediaStream | null,
   });
 
   // ─── Synthetic click dispatch ──────────────────────────────────────────
@@ -299,10 +300,17 @@ export function useHandTracking(): UseHandTrackingReturn {
           confirmedGestureRef.current = confirmedGesture;
         }
 
-        // ── Cursor smoothing ──
+        // ── Cursor smoothing & mapping ──
+        // Amplify movement so user doesn't have to reach the edges of the camera
         const indexTip = landmarks[8];
-        const mirroredX = 1 - indexTip.x; // Mirror for natural feel
-        pushToBuffer(smoothBufferRef.current, mirroredX, indexTip.y);
+        const rawMirroredX = 1 - indexTip.x;
+        
+        const amplify = (val: number) => {
+          // Map center 60% of camera [0.2, 0.8] to full screen [0, 1]
+          return Math.max(0, Math.min(1, (val - 0.2) * 1.666));
+        };
+
+        pushToBuffer(smoothBufferRef.current, amplify(rawMirroredX), amplify(indexTip.y));
 
         const smoothed = getSmoothedPosition(smoothBufferRef.current);
         const screenX = smoothed.x * window.innerWidth;
@@ -372,21 +380,30 @@ export function useHandTracking(): UseHandTrackingReturn {
         console.warn("Hand tracking works best on Chrome/Edge. Firefox may have reduced performance.");
       }
 
-      // 1. Initialize HandLandmarker if not already done
+      // 1. Initialize HandLandmarker (Auto fallback to CPU if GPU fails)
       if (!handLandmarkerRef.current) {
         const vision = await FilesetResolver.forVisionTasks(WASM_CDN);
 
-        handLandmarkerRef.current = await HandLandmarker.createFromOptions(vision, {
-          baseOptions: {
-            modelAssetPath: MODEL_URL,
-            delegate: "GPU",
-          },
-          runningMode: "VIDEO",
+        const options = {
+          runningMode: "VIDEO" as const,
           numHands: 1,
           minHandDetectionConfidence: 0.7,
           minHandPresenceConfidence: 0.7,
           minTrackingConfidence: 0.7,
-        });
+        };
+
+        try {
+          handLandmarkerRef.current = await HandLandmarker.createFromOptions(vision, {
+            ...options,
+            baseOptions: { modelAssetPath: MODEL_URL, delegate: "GPU" },
+          });
+        } catch (gpuErr) {
+          console.warn("[Nucleus HT] GPU delegate failed. Falling back to CPU.", gpuErr);
+          handLandmarkerRef.current = await HandLandmarker.createFromOptions(vision, {
+            ...options,
+            baseOptions: { modelAssetPath: MODEL_URL, delegate: "CPU" },
+          });
+        }
       }
 
       // 2. Request camera
@@ -441,6 +458,7 @@ export function useHandTracking(): UseHandTrackingReturn {
         isActive: true,
         isLoading: false,
         error: null,
+        stream: stream,
       }));
 
       // 4. Start detection loop
@@ -497,6 +515,7 @@ export function useHandTracking(): UseHandTrackingReturn {
       error: null,
       handDetected: false,
       fps: 0,
+      stream: null,
     });
   }, []);
 
