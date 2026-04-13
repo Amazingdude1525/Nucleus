@@ -650,10 +650,13 @@ export default function AtomicViewer() {
   const { enabled, isPinching, cursorX, cursorY, cameraReady, enableTracking, disableTracking } = useHandTracking(videoRef);
   const [hasSeenTutorial, setHasSeenTutorial] = useState(false);
 
-  // Trigger tutorial overlay when camera activates
-  if (enabled && cameraReady && !hasSeenTutorial) {
-    setTimeout(() => setHasSeenTutorial(true), 6000);
-  }
+  // Trigger tutorial overlay when camera activates correctly via useEffect
+  useEffect(() => {
+    if (enabled && cameraReady && !hasSeenTutorial) {
+      const timer = setTimeout(() => setHasSeenTutorial(true), 6000);
+      return () => clearTimeout(timer);
+    }
+  }, [enabled, cameraReady, hasSeenTutorial]);
 
   // Find currently active element index
   const currentIndex = useMemo(() => {

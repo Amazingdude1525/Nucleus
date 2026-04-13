@@ -206,11 +206,13 @@ export function useHandTracking(providedVideoRef?: React.RefObject<HTMLVideoElem
     cameraRef.current.start();
 
     return () => {
-      if (cameraRef.current) cameraRef.current.stop();
-      if (handsRef.current) handsRef.current.close();
-      if (videoRef.current) {
-        videoRef.current.remove();
-        videoRef.current = null;
+      if (cameraRef.current) {
+        cameraRef.current.stop();
+        cameraRef.current = null;
+      }
+      if (handsRef.current) {
+        handsRef.current.close();
+        handsRef.current = null;
       }
     };
   }, [state.enabled, onResults]);
