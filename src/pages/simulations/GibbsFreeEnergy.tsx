@@ -194,7 +194,6 @@ export default function GibbsFreeEnergy() {
                 boxShadow: `0 0 40px ${isSpontaneous ? "#22cc55" : "#ff3344"}15`,
               }}
             >
-              <div className="text-4xl mb-2">{isSpontaneous ? "✅" : "🚫"}</div>
               <div className="text-lg font-black" style={{ color: isSpontaneous ? "#22cc55" : "#ff3344" }}>
                 {isSpontaneous ? "SPONTANEOUS" : "NON-SPONTANEOUS"}
               </div>
