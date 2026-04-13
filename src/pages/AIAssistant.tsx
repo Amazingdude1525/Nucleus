@@ -52,8 +52,16 @@ export default function AIAssistant() {
   const [showTopics, setShowTopics] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [filePreview, setFilePreview] = useState<string | null>(null);
+  const [showComingSoon, setShowComingSoon] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (showComingSoon) {
+      const timer = setTimeout(() => setShowComingSoon(false), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [showComingSoon]);
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -101,14 +109,8 @@ export default function AIAssistant() {
       const currentDate = new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' });
       const actualSystemPrompt = `${SYSTEM_PROMPT}\n\n[IDENTITY PROTOCOL]: The user you are talking to is named "${userName}". You MUST address them correctly as "${userName}" in your response. NEVER use generic terms.\n\nCurrent System Time: ${currentDate}`;
 
-      // Construct content with image if present
+      // Simplified text-only content for stability
       let userContent: any = text.trim();
-      if (currentFile && currentPreview && currentFile.type.startsWith('image/')) {
-        userContent = [
-          { type: "text", text: text.trim() || "Please analyze this image and explain the contents." },
-          { type: "image_url", image_url: { url: currentPreview } }
-        ];
-      }
 
       const apiMessages = [
         { role: "system" as const, content: actualSystemPrompt },
@@ -402,32 +404,31 @@ export default function AIAssistant() {
 
       {/* Input area */}
       <div className="border-t border-[#00F0FF]/21 p-4 relative z-10" style={{ background: "rgba(0,0,0,0.68)", backdropFilter: "blur(20px)" }}>
-        {/* File Preview Bar */}
         <AnimatePresence>
-          {selectedFile && (
+          {showComingSoon && (
             <motion.div 
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 10 }}
-              className="max-w-3xl mx-auto mb-3 flex items-center gap-3 glass p-2 rounded-xl border border-primary/30"
+              initial={{ opacity: 0, scale: 0.9, y: 10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 10 }}
+              className="max-w-md mx-auto mb-4 glass p-4 rounded-2xl border border-[#00F0FF]/50 shadow-[0_0_30px_#00F0FF22] text-center"
             >
-              {filePreview ? (
-                <img src={filePreview} alt="Preview" className="w-10 h-10 rounded-lg object-cover border border-white/10" />
-              ) : (
-                <div className="w-10 h-10 rounded-lg glass border border-white/10 flex items-center justify-center">
-                  <Paperclip className="w-4 h-4 text-primary" />
-                </div>
-              )}
-              <div className="flex-1 min-w-0">
-                <p className="text-xs font-bold text-white truncate">{selectedFile.name}</p>
-                <p className="text-[10px] text-muted-foreground uppercase tracking-widest">{(selectedFile.size / 1024 / 1024).toFixed(2)} MB • Ready to analyze</p>
-              </div>
-              <button onClick={removeFile} className="p-2 hover:bg-white/10 rounded-lg transition-colors group">
-                <X className="w-4 h-4 text-muted-foreground group-hover:text-red-400" />
-              </button>
+              <Sparkles className="w-8 h-8 text-primary mx-auto mb-3" />
+              <h3 className="text-sm font-bold text-white mb-1 uppercase tracking-widest">Vision Feature Coming Soon</h3>
+              <p className="text-[11px] text-white/50 leading-relaxed">
+                NUCLEUS_X Engine is currently indexing multi-modal data. Vision & PDF analysis will be unlocked in the next core update. ✨
+              </p>
             </motion.div>
           )}
         </AnimatePresence>
+
+        {/* Dynamic Hint */}
+        <motion.div 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 0.6 }}
+          className="max-w-3xl mx-auto mb-2 text-[10px] text-primary/80 uppercase tracking-widest font-mono text-center"
+        >
+          HINT: You can always copy-paste your text or problems here—I'll help you solve them instantly! ✨
+        </motion.div>
 
         <form onSubmit={handleSubmit} className="flex gap-3 max-w-3xl mx-auto relative group">
           <input 
@@ -442,7 +443,7 @@ export default function AIAssistant() {
           
           <motion.button
             type="button"
-            onClick={() => fileInputRef.current?.click()}
+            onClick={() => setShowComingSoon(true)}
             className="px-4 py-4 rounded-xl glass border border-[#00F0FF]/40 text-primary hover:border-primary transition-all relative z-10"
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
