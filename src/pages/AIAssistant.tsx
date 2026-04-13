@@ -127,7 +127,7 @@ export default function AIAssistant() {
           "X-Title": "NUCLEUS",
         },
         body: JSON.stringify({
-          model: "google/gemini-flash-1.5:free",
+          model: "openrouter/free",
           messages: apiMessages,
           temperature: 0.7,
         }),
