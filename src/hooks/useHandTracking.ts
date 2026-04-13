@@ -131,7 +131,6 @@ export function useHandTracking(): UseHandTrackingReturn {
   const streamRef = useRef<MediaStream | null>(null);
 
   // Smoothing and timing refs
-  const smoothBufferRef = useRef<SmoothBuffer>(createSmoothBuffer());
   const lastCursorRef = useRef({ x: 0, y: 0 });
   const lastPinchTimeRef = useRef(0);
   const gestureCounterRef = useRef<{ gesture: GestureType; count: number }>({
@@ -404,7 +403,6 @@ export function useHandTracking(): UseHandTrackingReturn {
       console.log("[Nucleus HT] Camera active, video playing. Resolution:", video.videoWidth, "x", video.videoHeight);
 
       // Reset smoothing
-      smoothBufferRef.current = createSmoothBuffer();
       lowResRef.current = false;
       isPausedRef.current = false;
 
