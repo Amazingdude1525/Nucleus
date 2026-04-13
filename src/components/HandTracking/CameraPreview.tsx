@@ -8,8 +8,8 @@ import { type GestureType } from "@/hooks/useHandTracking";
 const GESTURE_DISPLAY: Record<GestureType, { emoji: string; label: string }> = {
   point: { emoji: "☝️", label: "Point" },
   pinch: { emoji: "🤏", label: "Click" },
-  fist: { emoji: "✊", label: "Fist" },
-  peace: { emoji: "✌️", label: "Zoom" },
+  fist: { emoji: "✊", label: "Zoom Out" },
+  peace: { emoji: "✌️", label: "Zoom In" },
   open_palm: { emoji: "🖐️", label: "Pause" },
   none: { emoji: "❌", label: "None" },
 };

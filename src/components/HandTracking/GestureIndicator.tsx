@@ -10,8 +10,8 @@ const GESTURE_INFO: Record<
 > = {
   point: { emoji: "☝️", label: "Cursor", color: "#00E5FF" },
   pinch: { emoji: "🤏", label: "Click!", color: "#22cc88" },
-  fist: { emoji: "✊", label: "Hold", color: "#ff6644" },
-  peace: { emoji: "✌️", label: "Zoom", color: "#9966ff" },
+  fist: { emoji: "✊", label: "Zoom Out", color: "#ff6644" },
+  peace: { emoji: "✌️", label: "Zoom In", color: "#9966ff" },
   open_palm: { emoji: "🖐️", label: "Paused", color: "#eab308" },
   none: { emoji: "🔍", label: "Detecting...", color: "#666" },
 };

@@ -102,7 +102,10 @@ export default function MoleculeViewer() {
       }));
     }
     if (enabled && gesture === 'peace') {
-      setZoom(prev => prev + 0.02);
+      setZoom(prev => Math.min(3, prev + 0.02));
+    }
+    if (enabled && gesture === 'fist') {
+      setZoom(prev => Math.max(0.3, prev - 0.02));
     }
   }, [enabled, cursorPosition, gesture]);
 
@@ -481,7 +484,7 @@ export default function MoleculeViewer() {
 
           {/* Controls hint */}
           <div className="absolute bottom-4 left-1/2 -translate-x-1/2 text-[10px] text-muted-foreground/30">
-            Drag to rotate • Scroll to zoom
+            Drag to rotate • Scroll to zoom • ✌️ Zoom in • ✊ Zoom out
           </div>
         </div>
       </div>

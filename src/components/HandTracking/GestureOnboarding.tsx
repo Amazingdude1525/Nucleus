@@ -24,8 +24,8 @@ const GESTURE_CARDS: GestureCard[] = [
     animationClass: "gesture-anim-pinch",
   },
   {
-    title: "Two Fingers to Zoom",
-    description: "Spread or close index + middle finger on 3D viewers to zoom",
+    title: "Zoom In & Out",
+    description: "✌️ Peace sign to zoom in • ✊ Fist to zoom out on 3D viewers",
     emoji: "✌️",
     animationClass: "gesture-anim-peace",
   },

@@ -98,8 +98,8 @@ function UnitCell({ type, showEdges, tracking }: { type: LatticeType; showEdges:
         groupRef.current.rotation.y += (targetRotY - groupRef.current.rotation.y) * 0.1;
         groupRef.current.rotation.x += (targetRotX - groupRef.current.rotation.x) * 0.1;
         
-        // Use openness for zoom scale
-        targetScale.current = 0.5 + Math.max(0, Math.min(1, tracking.openness)) * 1.5;
+        // Use openness for zoom: fist(0) → zoom out, peace(1) → zoom in
+        targetScale.current = 0.6 + Math.max(0, Math.min(1, tracking.openness)) * 1.4;
         currentScale.current += (targetScale.current - currentScale.current) * 0.1;
         
         groupRef.current.scale.set(currentScale.current, currentScale.current, currentScale.current);
@@ -334,7 +334,7 @@ export default function CrystalLattice() {
             <UnitCell 
               type={latticeType} 
               showEdges={showEdges} 
-              tracking={{ active: enabled, rawX: rawCursorX, rawY: rawCursorY, openness: gesture === 'peace' ? 1 : gesture === 'fist' ? 0 : 0.5 }} 
+              tracking={{ active: enabled, rawX: rawCursorX, rawY: rawCursorY, openness: gesture === 'peace' ? 1 : gesture === 'fist' ? 0 : 0.5 }}
             />
             <OrbitControls enablePan={false} minDistance={1.5} maxDistance={6} />
           </Canvas>
