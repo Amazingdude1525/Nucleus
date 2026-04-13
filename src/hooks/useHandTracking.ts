@@ -51,52 +51,7 @@ const GESTURE_DEBOUNCE_FRAMES = 3;
 /** FPS threshold to trigger quality downgrade */
 const MIN_FPS_THRESHOLD = 20;
 
-// ─── Smoothing helpers ──────────────────────────────────────────────────────
-
-interface SmoothBuffer {
-  x: number[];
-  y: number[];
-  index: number;
-  filled: boolean;
-}
-
-function createSmoothBuffer(): SmoothBuffer {
-  return {
-    x: new Array(SMOOTH_BUFFER_SIZE).fill(0.5),
-    y: new Array(SMOOTH_BUFFER_SIZE).fill(0.5),
-    index: 0,
-    filled: false,
-  };
-}
-
-/** Weighted moving average — recent frames weighted more heavily */
-function getSmoothedPosition(buffer: SmoothBuffer): { x: number; y: number } {
-  const len = buffer.filled ? SMOOTH_BUFFER_SIZE : buffer.index;
-  if (len === 0) return { x: 0.5, y: 0.5 };
-
-  let totalWeight = 0;
-  let sx = 0;
-  let sy = 0;
-
-  for (let i = 0; i < len; i++) {
-    // Weight: most recent = highest, geometric falloff
-    const age = (buffer.index - 1 - i + SMOOTH_BUFFER_SIZE) % SMOOTH_BUFFER_SIZE;
-    if (!buffer.filled && age >= buffer.index) continue;
-    const weight = Math.pow(0.7, age); // exponential weighting
-    sx += buffer.x[i] * weight;
-    sy += buffer.y[i] * weight;
-    totalWeight += weight;
-  }
-
-  return { x: sx / totalWeight, y: sy / totalWeight };
-}
-
-function pushToBuffer(buffer: SmoothBuffer, x: number, y: number) {
-  buffer.x[buffer.index] = x;
-  buffer.y[buffer.index] = y;
-  buffer.index = (buffer.index + 1) % SMOOTH_BUFFER_SIZE;
-  if (buffer.index === 0) buffer.filled = true;
-}
+// ─── Smoothing helpers removed in favor of exponential average ─────────────────
 
 // ─── Gesture detection helpers ──────────────────────────────────────────────
 
@@ -301,28 +256,28 @@ export function useHandTracking(): UseHandTrackingReturn {
         }
 
         // ── Cursor smoothing & mapping ──
-        // Amplify movement so user doesn't have to reach the edges of the camera
         const indexTip = landmarks[8];
+        
+        // Mirror the X coordinate for natural interaction
         const rawMirroredX = 1 - indexTip.x;
         
-        const amplify = (val: number) => {
-          // Map center 60% of camera [0.2, 0.8] to full screen [0, 1]
-          return Math.max(0, Math.min(1, (val - 0.2) * 1.666));
-        };
+        // Optional: slight amplification so user doesn't need to reach edges of camera
+        const amplify = (val: number) => Math.max(0, Math.min(1, (val - 0.15) * 1.42));
+        
+        const targetX = amplify(rawMirroredX) * window.innerWidth;
+        const targetY = amplify(indexTip.y) * window.innerHeight;
 
-        pushToBuffer(smoothBufferRef.current, amplify(rawMirroredX), amplify(indexTip.y));
+        // Fast exponential smoothing (ALPHA = 0.6 means 60% new frame, 40% old frame)
+        const ALPHA = 0.6;
+        
+        // Initialize cursor immediately if it's currently at 0,0
+        if (lastCursorRef.current.x === 0 && lastCursorRef.current.y === 0) {
+          lastCursorRef.current = { x: targetX, y: targetY };
+        }
 
-        const smoothed = getSmoothedPosition(smoothBufferRef.current);
-        const screenX = smoothed.x * window.innerWidth;
-        const screenY = smoothed.y * window.innerHeight;
-
-        // Dead zone check
-        const dx = screenX - lastCursorRef.current.x;
-        const dy = screenY - lastCursorRef.current.y;
-        const moved = Math.sqrt(dx * dx + dy * dy) >= DEAD_ZONE_PX;
-
-        const finalX = moved ? screenX : lastCursorRef.current.x;
-        const finalY = moved ? screenY : lastCursorRef.current.y;
+        const finalX = lastCursorRef.current.x * (1 - ALPHA) + targetX * ALPHA;
+        const finalY = lastCursorRef.current.y * (1 - ALPHA) + targetY * ALPHA;
+        
         lastCursorRef.current = { x: finalX, y: finalY };
 
         // ── Pinch detection with cooldown ──
