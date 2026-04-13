@@ -260,6 +260,11 @@ export function useHandTracking(): UseHandTrackingReturn {
       const startTime = performance.now();
       const results = handLandmarkerRef.current.detectForVideo(video, startTime);
 
+      // One-time log on first detection
+      if (results.landmarks && results.landmarks.length > 0 && !fpsFramesRef.current) {
+        console.log("[Nucleus HT] ✅ Hand detected! Landmarks:", results.landmarks[0].length);
+      }
+
       // FPS calculation
       fpsFramesRef.current++;
       if (startTime - fpsLastTimeRef.current >= 1000) {
@@ -403,10 +408,17 @@ export function useHandTracking(): UseHandTrackingReturn {
         console.warn("Camera resolution below 480p — tracking accuracy may be reduced.");
       }
 
-      // 3. Attach to hidden video element
+      // 3. Attach to off-screen video element
+      // IMPORTANT: Do NOT use display:none — browsers won't decode frames for hidden elements
       if (!videoRef.current) {
         const vid = document.createElement("video");
-        vid.style.display = "none";
+        vid.style.position = "fixed";
+        vid.style.top = "-9999px";
+        vid.style.left = "-9999px";
+        vid.style.width = "1px";
+        vid.style.height = "1px";
+        vid.style.opacity = "0.01";
+        vid.style.pointerEvents = "none";
         vid.setAttribute("playsinline", "");
         vid.setAttribute("autoplay", "");
         vid.muted = true;
@@ -416,8 +428,8 @@ export function useHandTracking(): UseHandTrackingReturn {
 
       const video = videoRef.current!;
       video.srcObject = stream;
-      video.style.transform = "scaleX(-1)";
       await video.play();
+      console.log("[Nucleus HT] Camera active, video playing. Resolution:", video.videoWidth, "x", video.videoHeight);
 
       // Reset smoothing
       smoothBufferRef.current = createSmoothBuffer();
