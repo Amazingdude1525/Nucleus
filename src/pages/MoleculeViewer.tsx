@@ -1,8 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Search, RotateCcw, Loader2, ExternalLink, Atom, Hand, Camera as CameraIcon } from "lucide-react";
-import { useHandTracking } from "@/hooks/useHandTracking";
-import HandTrackingCursor from "@/components/ui/HandTrackingCursor";
+import { useHandTrackingContext } from "@/components/HandTracking";
 
 // We'll render the molecule using a simple 3D ball-and-stick approach
 // based on parsed SDF data, rather than importing 3Dmol.js
@@ -89,21 +88,23 @@ export default function MoleculeViewer() {
   const [zoom, setZoom] = useState(1);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Hand Tracking setup
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const { enabled, isPinching, openness, rawCursorX, rawCursorY, cursorX, cursorY, cameraReady, enableTracking, disableTracking } = useHandTracking(videoRef);
+  // Hand Tracking from global context
+  const { isActive: enabled, cursorPosition, showOnboarding, deactivate: disableTracking, gesture } = useHandTrackingContext();
 
   // Hand-controlled 3D View Manipulation
   useEffect(() => {
-    if (enabled && cameraReady && typeof rawCursorX === 'number' && typeof openness === 'number') {
+    if (enabled && gesture === 'point') {
+      const normX = cursorPosition.x / window.innerWidth;
+      const normY = cursorPosition.y / window.innerHeight;
       setRotation(prev => ({
-        x: prev.x + (rawCursorY - 0.5) * 8,
-        y: prev.y + (rawCursorX - 0.5) * -8
+        x: prev.x + (normY - 0.5) * 8,
+        y: prev.y + (normX - 0.5) * -8
       }));
-      // Smooth dynamic zoom via openness (fist = zoom out, open = zoom in)
-      setZoom(prev => prev + ((0.5 + openness * 1.5) - prev) * 0.1); 
     }
-  }, [enabled, cameraReady, rawCursorX, rawCursorY, openness]);
+    if (enabled && gesture === 'peace') {
+      setZoom(prev => prev + 0.02);
+    }
+  }, [enabled, cursorPosition, gesture]);
 
   const fetchMolecule = useCallback(async (name: string) => {
     if (!name.trim()) return;
@@ -238,7 +239,7 @@ export default function MoleculeViewer() {
         
         {/* Hand Tracking Toggle */}
         <motion.button
-          onClick={enabled ? disableTracking : enableTracking}
+          onClick={enabled ? disableTracking : showOnboarding}
           className={`flex items-center gap-2 px-4 py-2 rounded-xl glass border text-xs font-medium transition-all ${
             enabled 
               ? "text-primary border-primary/50 bg-primary/10 shadow-[0_0_15px_hsl(185_100%_50%/0.3)]" 
@@ -248,7 +249,7 @@ export default function MoleculeViewer() {
           whileTap={{ scale: 0.95 }}
         >
           {enabled ? <CameraIcon className="w-4 h-4 text-primary" /> : <Hand className="w-4 h-4" />}
-          {enabled ? (cameraReady ? "Tracking Active" : "Loading Camera...") : "Track My Hand"}
+          {enabled ? "Tracking Active" : "Track My Hand"}
         </motion.button>
       </div>
 
@@ -485,38 +486,6 @@ export default function MoleculeViewer() {
         </div>
       </div>
 
-      {/* Spatial Tracking Cursor Overlay */}
-      <HandTrackingCursor enabled={enabled} isPinching={isPinching} cursorX={cursorX} cursorY={cursorY} />
-
-      {/* Debug Camera Pipeline Stream */}
-      <AnimatePresence>
-        {enabled && (
-          <motion.div 
-            className="fixed bottom-6 right-6 w-56 aspect-video bg-black rounded-xl overflow-hidden shadow-[0_0_20px_hsl(185_100%_50%/0.3)] border border-primary/30 z-30"
-            initial={{ opacity: 0, y: 20, scale: 0.9 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.9, y: 20 }}
-          >
-            <video 
-              ref={videoRef} 
-              autoPlay 
-              playsInline 
-              className="w-full h-full object-cover transform scale-x-[-1]" 
-            />
-            {cameraReady && (
-              <div className="absolute top-2 right-2 flex items-center gap-1.5 px-2 py-1 bg-black/60 backdrop-blur-md rounded border border-white/10">
-                <div className="w-1.5 h-1.5 rounded-full bg-green-500 shadow-[0_0_5px_#22cc22]" />
-                <span className="text-[9px] font-mono tracking-widest uppercase text-white/90">MediaPipe</span>
-              </div>
-            )}
-            {!cameraReady && (
-              <div className="absolute inset-0 flex items-center justify-center bg-black/80 font-mono text-xs text-primary animate-pulse">
-                INITIALIZING...
-              </div>
-            )}
-          </motion.div>
-        )}
-      </AnimatePresence>
     </motion.div>
   );
 }

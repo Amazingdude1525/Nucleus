@@ -18,12 +18,11 @@ import {
 } from "@/data/chemicals";
 import ParticleField from "@/components/splash/ParticleField";
 import ChemicalCard from "@/components/virtual-lab/ChemicalCard";
-import HandTrackingCursor from "@/components/ui/HandTrackingCursor";
 import Beaker3D from "@/components/virtual-lab/Beaker3D";
 import ReactionLog, { type LogEntry } from "@/components/virtual-lab/ReactionLog";
 import DashboardPanel from "@/components/virtual-lab/DashboardPanel";
 import TemperatureSlider from "@/components/virtual-lab/TemperatureSlider";
-import { useHandTracking } from "@/hooks/useHandTracking";
+import { useHandTrackingContext } from "@/components/HandTracking";
 
 const CATEGORY_ICONS: Record<ChemCategory, string> = {
   WATER: "💧",
@@ -45,8 +44,7 @@ const LAB_QUOTES = [
 // Removed complex AnimatedHandGesture in favor of a cleaner UI icon
 
 export default function VirtualLab() {
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const { enabled, isPinching, cursorX, cursorY, cameraReady, enableTracking, disableTracking } = useHandTracking(videoRef);
+  const { isActive: enabled, showOnboarding, deactivate: disableTracking } = useHandTrackingContext();
 
   const [hasEntered, setHasEntered] = useState(false);
   const [activeCategory, setActiveCategory] = useState<ChemCategory>("WATER");
@@ -60,8 +58,6 @@ export default function VirtualLab() {
   const [lastDeltaH, setLastDeltaH] = useState(0);
   const [logEntries, setLogEntries] = useState<LogEntry[]>([]);
   const [logId, setLogId] = useState(0);
-  const [hasSeenTutorial, setHasSeenTutorial] = useState(false);
-  const [showTutorial, setShowTutorial] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [smellAlert, setSmellAlert] = useState<string | null>(null);
   const [observations, setObservations] = useState<string[]>([]);
@@ -69,12 +65,7 @@ export default function VirtualLab() {
   // Pick a random quote
   const labQuote = useMemo(() => LAB_QUOTES[Math.floor(Math.random() * LAB_QUOTES.length)], []);
 
-  // Trigger tutorial overlay when camera activates
-  useEffect(() => {
-    if (enabled && cameraReady && !hasSeenTutorial) {
-      setShowTutorial(true);
-    }
-  }, [enabled, cameraReady, hasSeenTutorial]);
+
 
   const totalVolumeMl = useMemo(
     () => beakerContents.reduce((sum, c) => sum + c.chemical.volumeMl, 0),
@@ -506,7 +497,7 @@ export default function VirtualLab() {
             {/* Top Right Controls — properly spaced, not clipped */}
             <div className="absolute top-6 right-6 z-10 flex flex-col gap-2">
               <motion.button
-                onClick={enabled ? disableTracking : enableTracking}
+                onClick={enabled ? disableTracking : showOnboarding}
                 className={`flex items-center gap-2 px-4 py-2.5 rounded-xl glass border text-xs font-medium transition-all ${
                   enabled 
                     ? "text-primary border-primary/50 bg-primary/10 shadow-[0_0_15px_hsl(185_100%_50%/0.3)]" 
@@ -516,7 +507,7 @@ export default function VirtualLab() {
                 whileTap={{ scale: 0.95 }}
               >
                 {enabled ? <CameraIcon className="w-4 h-4 text-primary" /> : <Hand className="w-4 h-4" />}
-                {enabled ? (cameraReady ? "Tracking Active" : "Loading Camera...") : "Track My Hand"}
+                {enabled ? "Tracking Active" : "Track My Hand"}
               </motion.button>
               
               <motion.button
@@ -629,129 +620,7 @@ export default function VirtualLab() {
         </div>
       </div>
 
-      {/* Spatial Tracking Cursor Overlay */}
-      <AnimatePresence>
-        {enabled && cameraReady && (
-          <motion.div
-            className="pointer-events-none fixed z-50 rounded-full border-2 border-primary bg-primary/20 backdrop-blur-sm flex items-center justify-center transition-all duration-75 ease-out"
-            initial={{ opacity: 0, scale: 0 }}
-            animate={{ 
-              opacity: 1, 
-              scale: isPinching ? 0.7 : 1,
-              x: cursorX - 16, // Center offset
-              y: cursorY - 16
-            }}
-            exit={{ opacity: 0, scale: 0 }}
-            style={{ 
-              width: 32, 
-              height: 32,
-              boxShadow: `0 0 ${isPinching ? "25px" : "15px"} hsl(185 100% 50% / ${isPinching ? "0.6" : "0.3"})`
-            }}
-          >
-            {isPinching && (
-              <div className="w-2 h-2 rounded-full bg-primary" />
-            )}
-          </motion.div>
-        )}
 
-        {/* Spatial Mode Tutorial — Full screen blur with animated hand */}
-        {enabled && cameraReady && showTutorial && !hasSeenTutorial && (
-          <motion.div
-            className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-lg flex items-center justify-center"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-          >
-            <motion.div 
-              className="flex flex-col items-center gap-6 p-10 rounded-3xl glass border border-primary/30 text-center max-w-md"
-              style={{ boxShadow: "0 0 80px rgba(0,229,255,0.15)" }}
-              initial={{ scale: 0.9, y: 20 }}
-              animate={{ scale: 1, y: 0 }}
-              transition={{ type: "spring", stiffness: 300, damping: 25 }}
-            >
-              {/* Simplified Hand gesture */}
-              <div className="relative w-32 h-32 flex items-center justify-center p-6 border-2 border-primary/20 rounded-full gap-2">
-                <Hand className="w-16 h-16 text-primary" />
-                <motion.div
-                  className="absolute w-6 h-6 rounded-full border-2 border-primary"
-                  animate={{
-                    scale: [1, 2, 2.5],
-                    opacity: [1, 0.5, 0],
-                  }}
-                  transition={{ duration: 2, repeat: Infinity }}
-                />
-              </div>
-              
-              <h2 
-                className="text-2xl font-bold text-glow-cyan text-primary"
-                style={{ fontFamily: "'Orbitron', sans-serif" }}
-              >
-                Hand Tracking Active
-              </h2>
-              
-              <div className="space-y-4 text-sm" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
-                <div className="flex items-center gap-4 text-left">
-                  <div className="w-12 h-12 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0">
-                    <span className="text-lg">☝️</span>
-                  </div>
-                  <div>
-                    <div className="font-semibold text-white">Point to move</div>
-                    <div className="text-muted-foreground/70 text-xs">Move your index finger to control the cursor</div>
-                  </div>
-                </div>
-                
-                <div className="flex items-center gap-4 text-left">
-                  <div className="w-12 h-12 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0">
-                    <span className="text-lg">🤏</span>
-                  </div>
-                  <div>
-                    <div className="font-semibold text-white">Pinch to grab</div>
-                    <div className="text-muted-foreground/70 text-xs">Pinch thumb & index finger together to click/interact</div>
-                  </div>
-                </div>
-              </div>
-              
-              <button 
-                onClick={() => { setHasSeenTutorial(true); setShowTutorial(false); }}
-                className="mt-2 px-8 py-3 rounded-xl bg-primary/20 text-primary border border-primary/30 font-medium hover:bg-primary/30 transition-colors"
-                style={{ fontFamily: "'Space Grotesk', sans-serif" }}
-              >
-                Got it — Let's Go!
-              </button>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Debug Camera Pipeline Stream */}
-      <AnimatePresence>
-        {enabled && (
-          <motion.div 
-            className="fixed bottom-6 right-6 w-56 aspect-video bg-black rounded-xl overflow-hidden shadow-[0_0_20px_hsl(185_100%_50%/0.3)] border border-primary/30 z-30 group"
-            initial={{ opacity: 0, y: 20, scale: 0.9 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.9, y: 20 }}
-          >
-            <video 
-              ref={videoRef} 
-              autoPlay 
-              playsInline 
-              className="w-full h-full object-cover transform scale-x-[-1]" 
-            />
-            {cameraReady && (
-              <div className="absolute top-2 right-2 flex items-center gap-1.5 px-2 py-1 bg-black/60 backdrop-blur-md rounded border border-white/10">
-                <div className="w-1.5 h-1.5 rounded-full bg-green-500 shadow-[0_0_5px_#22cc22]" />
-                <span className="text-[9px] tracking-widest uppercase text-white/90" style={{ fontFamily: "'JetBrains Mono', monospace" }}>MediaPipe</span>
-              </div>
-            )}
-            {!cameraReady && (
-              <div className="absolute inset-0 flex items-center justify-center bg-black/80 text-xs text-primary animate-pulse" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
-                INITIALIZING...
-              </div>
-            )}
-          </motion.div>
-        )}
-      </AnimatePresence>
     </motion.div>
   );
 }

@@ -6,8 +6,7 @@ import { Search, ChevronLeft, ChevronRight, Share2, Hexagon, Hand, Camera as Cam
 import { periodicTable, type ElementData } from "@/data/elements";
 import PeriodicTable from "@/components/atomic-viewer/PeriodicTable";
 import ElementDetail from "@/components/atomic-viewer/ElementDetail";
-import { useHandTracking } from "@/hooks/useHandTracking";
-import HandTrackingCursor from "@/components/ui/HandTrackingCursor";
+import { useHandTrackingContext } from "@/components/HandTracking";
 
 // ─── Blackbody Radiation Tab ───
 function BlackbodyRadiation() {
@@ -646,17 +645,7 @@ export default function AtomicViewer() {
   const [viewMode, setViewMode] = useState<"table" | "3d">("table");
   const [activeTab, setActiveTab] = useState<"periodic" | "blackbody" | "radial" | "rutherford">("periodic");
 
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const { enabled, isPinching, cursorX, cursorY, cameraReady, enableTracking, disableTracking } = useHandTracking(videoRef);
-  const [hasSeenTutorial, setHasSeenTutorial] = useState(false);
-
-  // Trigger tutorial overlay when camera activates correctly via useEffect
-  useEffect(() => {
-    if (enabled && cameraReady && !hasSeenTutorial) {
-      const timer = setTimeout(() => setHasSeenTutorial(true), 6000);
-      return () => clearTimeout(timer);
-    }
-  }, [enabled, cameraReady, hasSeenTutorial]);
+  const { isActive: enabled, showOnboarding, deactivate: disableTracking } = useHandTrackingContext();
 
   // Find currently active element index
   const currentIndex = useMemo(() => {
@@ -732,7 +721,7 @@ export default function AtomicViewer() {
 
           {activeTab === "periodic" && (
             <motion.button
-              onClick={enabled ? disableTracking : enableTracking}
+              onClick={enabled ? disableTracking : showOnboarding}
               className={`flex items-center gap-2 px-4 py-2 rounded-xl glass border text-xs font-medium transition-all ${
                 enabled 
                   ? "text-primary border-primary/50 bg-primary/10 shadow-[0_0_15px_hsl(185_100%_50%/0.3)]" 
@@ -742,7 +731,7 @@ export default function AtomicViewer() {
               whileTap={{ scale: 0.95 }}
             >
               {enabled ? <CameraIcon className="w-4 h-4 text-primary" /> : <Hand className="w-4 h-4" />}
-              {enabled ? (cameraReady ? "Tracking Active" : "Loading Camera...") : "Track My Hand"}
+              {enabled ? "Tracking Active" : "Track My Hand"}
             </motion.button>
           )}
         </div>
@@ -750,8 +739,7 @@ export default function AtomicViewer() {
 
       {/* Main Content Area */}
       <div className="flex-1 relative flex overflow-hidden">
-        {/* Hand Tracking Visualizer */}
-        <HandTrackingCursor enabled={enabled} isPinching={isPinching} cursorX={cursorX} cursorY={cursorY} />
+        {/* Hand Tracking Visualizer — handled by global provider portals now */}
 
         <AnimatePresence mode="wait">
           {activeTab === "periodic" ? (
@@ -770,37 +758,6 @@ export default function AtomicViewer() {
                     searchQuery={searchQuery} 
                   />
                 </div>
-                
-                {/* Camera Feed - Localized within the table view space */}
-                <AnimatePresence>
-                  {enabled && (
-                    <motion.div 
-                      className="absolute bottom-4 left-4 w-40 aspect-video bg-black rounded-xl overflow-hidden shadow-[0_0_30px_hsl(185_100%_50%/0.25)] border-2 border-primary/40 z-20"
-                      initial={{ opacity: 0, y: 20, scale: 0.9 }}
-                      animate={{ opacity: 1, y: 0, scale: 1 }}
-                      exit={{ opacity: 0, scale: 0.9, y: 20 }}
-                    >
-                      <video 
-                        ref={videoRef} 
-                        autoPlay 
-                        playsInline 
-                        muted
-                        className="w-full h-full object-cover transform scale-x-[-1]" 
-                      />
-                      {cameraReady && (
-                        <div className="absolute top-2 right-2 flex items-center gap-1.5 px-2 py-1 bg-black/60 backdrop-blur-md rounded border border-white/10">
-                          <div className="w-1.5 h-1.5 rounded-full bg-green-500 shadow-[0_0_5px_#22cc22]" />
-                          <span className="text-[9px] font-mono tracking-widest uppercase text-white/90">MediaPipe</span>
-                        </div>
-                      )}
-                      {!cameraReady && (
-                        <div className="absolute inset-0 flex items-center justify-center bg-black/80 font-mono text-xs text-primary animate-pulse">
-                          INITIALIZING...
-                        </div>
-                      )}
-                    </motion.div>
-                  )}
-                </AnimatePresence>
               </motion.div>
             ) : (
               <motion.div
@@ -868,84 +825,6 @@ export default function AtomicViewer() {
         </AnimatePresence>
       </div>
 
-      {/* Spatial Tracking Cursor Overlay */}
-      <AnimatePresence>
-        {enabled && cameraReady && (
-          <motion.div
-            className="pointer-events-none fixed z-50 rounded-full border-2 border-primary bg-primary/20 backdrop-blur-sm flex items-center justify-center transition-all duration-75 ease-out"
-            initial={{ opacity: 0, scale: 0 }}
-            animate={{ 
-              opacity: 1, 
-              scale: isPinching ? 0.7 : 1,
-              x: cursorX - 16, // Center offset
-              y: cursorY - 16
-            }}
-            exit={{ opacity: 0, scale: 0 }}
-            style={{ 
-              width: 32, 
-              height: 32,
-              boxShadow: `0 0 ${isPinching ? "25px" : "15px"} hsl(185 100% 50% / ${isPinching ? "0.6" : "0.3"})`
-            }}
-          >
-            {isPinching && (
-              <div className="w-2 h-2 rounded-full bg-primary" />
-            )}
-          </motion.div>
-        )}
-
-        {/* Spatial Mode Tutorial */}
-        {enabled && cameraReady && !hasSeenTutorial && (
-          <motion.div
-            className="fixed inset-0 z-40 bg-background/80 backdrop-blur-sm flex items-center justify-center"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-          >
-            <div className="flex flex-col items-center gap-6 p-8 rounded-2xl glass border border-primary/30 shadow-[0_0_50px_hsl(185_100%_50%/0.2)] text-center max-w-sm">
-              <div className="relative w-24 h-24 mb-2">
-                <Hand className="w-full h-full text-primary" />
-                <motion.div
-                  className="absolute bottom-4 right-4 w-6 h-6 rounded-full border-2 border-primary/80"
-                  animate={{ 
-                    scale: [1, 0.5, 1],
-                    boxShadow: ["0 0 0px hsl(185 100% 50% / 0)", "0 0 20px hsl(185 100% 50% / 0.8)", "0 0 0px hsl(185 100% 50% / 0)"]
-                  }}
-                  transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
-                />
-              </div>
-              <h2 className="text-2xl font-bold text-glow-cyan">Hand Tracking Active</h2>
-              <p className="text-muted-foreground text-sm">
-                Move your <strong className="text-primary">Index Finger</strong> to control the cursor. 
-                Pinch your <strong className="text-primary">Thumb & Index</strong> together to select elements from the Periodic Table!
-              </p>
-              <button 
-                onClick={() => setHasSeenTutorial(true)}
-                className="mt-4 px-6 py-2.5 rounded-xl bg-primary/20 text-primary border border-primary/30 font-medium hover:bg-primary/30 transition-colors"
-              >
-                Got it
-              </button>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Hidden video element for when camera is NOT in table view */}
-      {enabled && viewMode !== "table" && (
-        <div className="fixed bottom-6 left-6 w-56 aspect-video bg-black rounded-xl overflow-hidden shadow-[0_0_20px_hsl(185_100%_50%/0.3)] border border-primary/30 z-30">
-          <video 
-            ref={videoRef} 
-            autoPlay 
-            playsInline 
-            className="w-full h-full object-cover transform scale-x-[-1]" 
-          />
-          {cameraReady && (
-            <div className="absolute top-2 right-2 flex items-center gap-1.5 px-2 py-1 bg-black/60 backdrop-blur-md rounded border border-white/10">
-              <div className="w-1.5 h-1.5 rounded-full bg-green-500 shadow-[0_0_5px_#22cc22]" />
-              <span className="text-[9px] font-mono tracking-widest uppercase text-white/90">MediaPipe</span>
-            </div>
-          )}
-        </div>
-      )}
     </motion.div>
   );
 }

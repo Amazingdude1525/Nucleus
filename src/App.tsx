@@ -4,6 +4,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import AppShell from "@/components/layout/AppShell";
+import { HandTrackingProvider } from "@/components/HandTracking";
 import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
 import AtomicViewer from "./pages/AtomicViewer";
@@ -43,33 +44,35 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <GlobalBackground />
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route element={<AppShell />}>
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/atomic-viewer" element={<AtomicViewer />} />
-            <Route path="/virtual-lab" element={<VirtualLab />} />
-            <Route path="/molecule" element={<MoleculeViewer />} />
-            <Route path="/crystal" element={<CrystalLattice />} />
-            <Route path="/config" element={<ElectronicConfig />} />
-            <Route path="/ai" element={<AIAssistant />} />
-            <Route path="/creators" element={<Creators />} />
-          </Route>
-          <Route path="/simulations/quantum-box" element={<QuantumBox />} />
-          <Route path="/simulations/lennard-jones" element={<LennardJones />} />
-          <Route path="/simulations/de-broglie" element={<DeBroglieScaler />} />
-          <Route path="/simulations/gibbs-free-energy" element={<GibbsFreeEnergy />} />
-          <Route path="/simulations/ideal-vs-real-gas" element={<IdealVsRealGas />} />
-          <Route path="/simulations/system-types" element={<SystemTypes />} />
-          <Route path="/simulations/state-vs-path" element={<StateVsPath />} />
-          <Route path="/simulations/compressibility" element={<CompressibilityFactor />} />
-          <Route path="/simulations/first-law" element={<FirstLawCalc />} />
-          <Route path="/simulations/maxwell-relations" element={<MaxwellRelations />} />
-          <Route path="/pes" element={<PESExplorer />} />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-        <ScientificCalculator />
+        <HandTrackingProvider>
+          <GlobalBackground />
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route element={<AppShell />}>
+              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/atomic-viewer" element={<AtomicViewer />} />
+              <Route path="/virtual-lab" element={<VirtualLab />} />
+              <Route path="/molecule" element={<MoleculeViewer />} />
+              <Route path="/crystal" element={<CrystalLattice />} />
+              <Route path="/config" element={<ElectronicConfig />} />
+              <Route path="/ai" element={<AIAssistant />} />
+              <Route path="/creators" element={<Creators />} />
+            </Route>
+            <Route path="/simulations/quantum-box" element={<QuantumBox />} />
+            <Route path="/simulations/lennard-jones" element={<LennardJones />} />
+            <Route path="/simulations/de-broglie" element={<DeBroglieScaler />} />
+            <Route path="/simulations/gibbs-free-energy" element={<GibbsFreeEnergy />} />
+            <Route path="/simulations/ideal-vs-real-gas" element={<IdealVsRealGas />} />
+            <Route path="/simulations/system-types" element={<SystemTypes />} />
+            <Route path="/simulations/state-vs-path" element={<StateVsPath />} />
+            <Route path="/simulations/compressibility" element={<CompressibilityFactor />} />
+            <Route path="/simulations/first-law" element={<FirstLawCalc />} />
+            <Route path="/simulations/maxwell-relations" element={<MaxwellRelations />} />
+            <Route path="/pes" element={<PESExplorer />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+          <ScientificCalculator />
+        </HandTrackingProvider>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
