@@ -758,49 +758,49 @@ export default function AtomicViewer() {
             viewMode === "table" ? (
               <motion.div
                 key="table"
-                className="flex-1 relative overflow-auto scrollbar-thin"
+                className="flex-1 relative overflow-hidden"
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 1.05 }}
                 transition={{ duration: 0.4 }}
               >
-                <PeriodicTable 
-                  onSelect={handleElementSelect} 
-                  searchQuery={searchQuery} 
-                />
+                <div className="absolute inset-0 overflow-auto scrollbar-thin">
+                  <PeriodicTable 
+                    onSelect={handleElementSelect} 
+                    searchQuery={searchQuery} 
+                  />
+                </div>
                 
-                {/* Camera Feed embedded in the bottom-left empty space of the periodic table */}
-                {enabled && (
-                  <motion.div 
-                    className="absolute bottom-4 left-4 w-40 aspect-video bg-black rounded-xl overflow-hidden shadow-[0_0_30px_hsl(185_100%_50%/0.25)] border-2 border-primary/40 z-20"
-                    initial={{ opacity: 0, y: 20, scale: 0.9 }}
-                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.9, y: 20 }}
-                  >
-                    <video 
-                      ref={videoRef} 
-                      autoPlay 
-                      playsInline 
-                      className="w-full h-full object-cover transform scale-x-[-1]" 
-                    />
-                    {cameraReady && (
-                      <div className="absolute top-2 right-2 flex items-center gap-1.5 px-2 py-1 bg-black/60 backdrop-blur-md rounded border border-white/10">
-                        <div className="w-1.5 h-1.5 rounded-full bg-green-500 shadow-[0_0_5px_#22cc22]" />
-                        <span className="text-[9px] font-mono tracking-widest uppercase text-white/90">MediaPipe</span>
-                      </div>
-                    )}
-                    {!cameraReady && (
-                      <div className="absolute inset-0 flex items-center justify-center bg-black/80 font-mono text-xs text-primary animate-pulse">
-                        INITIALIZING...
-                      </div>
-                    )}
-                    {/* Decorative corner brackets */}
-                    <div className="absolute top-0 left-0 w-4 h-4 border-t-2 border-l-2 border-primary/60 rounded-tl" />
-                    <div className="absolute top-0 right-0 w-4 h-4 border-t-2 border-r-2 border-primary/60 rounded-tr" />
-                    <div className="absolute bottom-0 left-0 w-4 h-4 border-b-2 border-l-2 border-primary/60 rounded-bl" />
-                    <div className="absolute bottom-0 right-0 w-4 h-4 border-b-2 border-r-2 border-primary/60 rounded-br" />
-                  </motion.div>
-                )}
+                {/* Camera Feed - Localized within the table view space */}
+                <AnimatePresence>
+                  {enabled && (
+                    <motion.div 
+                      className="absolute bottom-4 left-4 w-40 aspect-video bg-black rounded-xl overflow-hidden shadow-[0_0_30px_hsl(185_100%_50%/0.25)] border-2 border-primary/40 z-20"
+                      initial={{ opacity: 0, y: 20, scale: 0.9 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                    >
+                      <video 
+                        ref={videoRef} 
+                        autoPlay 
+                        playsInline 
+                        muted
+                        className="w-full h-full object-cover transform scale-x-[-1]" 
+                      />
+                      {cameraReady && (
+                        <div className="absolute top-2 right-2 flex items-center gap-1.5 px-2 py-1 bg-black/60 backdrop-blur-md rounded border border-white/10">
+                          <div className="w-1.5 h-1.5 rounded-full bg-green-500 shadow-[0_0_5px_#22cc22]" />
+                          <span className="text-[9px] font-mono tracking-widest uppercase text-white/90">MediaPipe</span>
+                        </div>
+                      )}
+                      {!cameraReady && (
+                        <div className="absolute inset-0 flex items-center justify-center bg-black/80 font-mono text-xs text-primary animate-pulse">
+                          INITIALIZING...
+                        </div>
+                      )}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </motion.div>
             ) : (
               <motion.div

@@ -178,32 +178,51 @@ export function useHandTracking(providedVideoRef?: React.RefObject<HTMLVideoElem
       fallbackVideoRef.current = video;
     }
 
-    handsRef.current = new Hands({
-      locateFile: (file) => {
-        return `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`;
-      },
-    });
+    let hands: Hands | null = null;
+    let camera: Camera | null = null;
 
-    handsRef.current.setOptions({
-      maxNumHands: 1,
-      modelComplexity: 1,
-      minDetectionConfidence: 0.85,
-      minTrackingConfidence: 0.8,
-    });
+    const initializeMediaPipe = async () => {
+      // Safety check: Ensure video element is actually available in the DOM
+      if (!videoRef.current) {
+        console.warn("HandTracking: Video element not found, retrying in 100ms...");
+        setTimeout(initializeMediaPipe, 100);
+        return;
+      }
 
-    handsRef.current.onResults(onResults);
+      try {
+        hands = new Hands({
+          locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`,
+        });
 
-    cameraRef.current = new Camera(videoRef.current, {
-      onFrame: async () => {
-        if (videoRef.current && handsRef.current) {
-          await handsRef.current.send({ image: videoRef.current });
-        }
-      },
-      width: 640,
-      height: 480,
-    });
+        hands.setOptions({
+          maxNumHands: 1,
+          modelComplexity: 1,
+          minDetectionConfidence: 0.8,
+          minTrackingConfidence: 0.7,
+        });
 
-    cameraRef.current.start();
+        hands.onResults(onResults);
+        handsRef.current = hands;
+
+        camera = new Camera(videoRef.current, {
+          onFrame: async () => {
+            if (videoRef.current && handsRef.current) {
+              await handsRef.current.send({ image: videoRef.current });
+            }
+          },
+          width: 640,
+          height: 480,
+        });
+
+        cameraRef.current = camera;
+        await camera.start();
+      } catch (err) {
+        console.error("HandTracking initialization failed:", err);
+        setState(s => ({ ...s, enabled: false }));
+      }
+    };
+
+    initializeMediaPipe();
 
     return () => {
       if (cameraRef.current) {
