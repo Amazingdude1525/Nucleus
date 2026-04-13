@@ -152,6 +152,8 @@ export default function CameraPreview({
   }, [isDragging, dragOffset, width, height]);
 
   // ── Mirror video feed into internal canvas-like display ──
+  // hasInitialized is needed because the video element doesn't exist in the DOM
+  // until position is set (returns null when position.x < 0).
   const internalVideoRef = useRef<HTMLVideoElement>(null);
   useEffect(() => {
     if (isActive && internalVideoRef.current && stream) {
@@ -160,7 +162,7 @@ export default function CameraPreview({
         internalVideoRef.current.play().catch(() => {});
       }
     }
-  }, [isActive, stream]);
+  }, [isActive, stream, hasInitialized]);
 
   // Status dot color
   const statusColor = handDetected ? "#22cc44" : isActive ? "#eab308" : "#ef4444";

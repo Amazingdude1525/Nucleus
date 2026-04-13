@@ -435,6 +435,20 @@
   to { transform: rotate(360deg); }
 }
 
+/* ─── Gesture cursor (laser pointer) animations ─── */
+@keyframes nucleus-cursor-pulse {
+  from { transform: scale(1); }
+  to { transform: scale(1.12); }
+}
+@keyframes nucleus-cursor-ripple {
+  0% { transform: scale(1); opacity: 1; }
+  100% { transform: scale(2.5); opacity: 0; }
+}
+@keyframes nucleus-cursor-ring {
+  0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.3; }
+  50% { transform: translate(-50%, -50%) scale(1.2); opacity: 0.1; }
+}
+
 /* Utility animation classes */
 .animate-pulse-amber { animation: pulse-amber 2s ease-in-out infinite; }
 .animate-pulse-cyan { animation: pulse-cyan 2s ease-in-out infinite; }
