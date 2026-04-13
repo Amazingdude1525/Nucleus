@@ -155,35 +155,18 @@ export default function AIAssistant() {
 
       setMessages((prev) => [...prev, aiMsg]);
     } catch (err: any) {
-      console.warn("API Error intercepted:", err.message || err);
-      // Fallback local robust chemistry responder
-      const q = text.toLowerCase();
-      let fallbackContent = "⚠️ I'm operating in **Local Offline Mode** due to an API connectivity issue. However, I can still help you with standard chemistry questions!\n\n";
-      
-      if (q.includes("thermodynamics") || q.includes("enthalpy") || q.includes("exothermic")) {
-        fallbackContent += "### Thermodynamics in Chemistry\n\nThermodynamics is the study of energy and its transformations. Key concepts include:\n\n1. **Enthalpy ($\\Delta H$)**: Measures the heat content of a system. \n   - **Exothermic** ($\\Delta H < 0$): Releases heat (e.g., combustion).\n   - **Endothermic** ($\\Delta H > 0$): Absorbs heat (e.g., melting ice).\n2. **Entropy ($\\Delta S$)**: Measures the disorder of a system.\n3. **Gibbs Free Energy ($\\Delta G$)**: Determines reaction spontaneity. \n   - Equation: $\\Delta G = \\Delta H - T\\Delta S$";
-      } else if (q.includes("sn1") && q.includes("sn2")) {
-        fallbackContent += "### SN1 vs SN2 Mechanisms\n\n| Feature | SN1 (Unimolecular) | SN2 (Bimolecular) |\n|---|---|---|\n| **Steps** | 2 steps (Carbocation intermediate) | 1 step (Concerted) |\n| **Rate Law** | Rate = k[Substrate] | Rate = k[Substrate][Nucleophile] |\n| **Stereochem** | Racemization | Inversion of configuration |\n| **Substrate** | Tertiary > Secondary | Primary > Secondary |";
-      } else if (q.includes("molarity")) {
-        fallbackContent += "### How to Calculate Molarity\n\n**Molarity (M)** is defined as the number of moles of solute divided by the volume of the solution in liters.\n\n$$\\text{Molarity} (M) = \\frac{\\text{moles of solute (mol)}}{\\text{volume of solution (L)}}$$\n\n**Step-by-step example:**\n1. Find the mass of your solute (e.g., $58.44$ g of NaCl).\n2. Calculate moles: $\\text{Mass} \\div \\text{Molar Mass}$ ($58.44 \\div 58.44 = 1.0$ mol).\n3. Divide by volume in liters (e.g., dissolved in $0.5$ L).\n4. Result: $1.0$ mol / $0.5$ L = **2.0 M**.";
-      } else if (q.includes("sodium") && (q.includes("water") || q.includes("reacts"))) {
-        fallbackContent += "### Sodium reacting with Water\n\nWhen sodium metal ($Na$) is placed in water ($H_2O$), a highly exothermic reaction occurs, producing sodium hydroxide ($NaOH$) and hydrogen gas ($H_2$):\n\n`2Na(s) + 2H₂O(l) → 2NaOH(aq) + H₂(g) + heat`\n\n> **Key Observation**: The sodium rapidly moves around the surface, fizzes violently, and the hydrogen gas may ignite with a characteristic popping sound or an orange flame due to the sodium emission spectrum.";
-      } else if (q.includes("le chatelier")) {
-        fallbackContent += "### Le Chatelier's Principle\n\nLe Chatelier's Principle states that if a dynamic equilibrium is disturbed by changing the conditions, the position of equilibrium shifts to counteract the change to reestablish an equilibrium.\n\n* **Concentration**: Adding a reactant shifts equilibrium to the right.\n* **Temperature**: Increasing temperature shifts an exothermic reaction to the left.\n* **Pressure**: Increasing pressure shifts the reaction toward the side with fewer moles of gas.";
-      } else if (q.includes("build") || q.includes("creator") || q.includes("nucleus")) {
-        fallbackContent += "### NUCLEUS Project\n\nNUCLEUS is a next-generation interactive computational chemistry ecosystem. It features:\n- A **Virtual Lab** with an accurate thermodynamic engine.\n- A 3D **Atomic Viewer** exploring the quantum properties of elements.\n- This AI assistant for theoretical learning.";
-      } else {
-        fallbackContent += "I didn't quite catch a specific chemistry topic I'm programmed for in local mode. Could you ask about:\n- **Thermodynamics** (Enthalpy, entropy)\n- **Reactions** (SN1/SN2, Sodium & Water)\n- **Concentration** (Molarity calculations)\n- **Equilibrium** (Le Chatelier's principle)";
-      }
-
-      const fallbackMsg: Message = {
-        id: msgId + 2,
+      console.error("AI Assistant Error:", err);
+      const errMsg: Message = {
+        id: Date.now(),
         role: "assistant",
-        content: fallbackContent,
-        timestamp: new Date(),
+        content: `❌ **Connection Error**: ${err.message || "Something went wrong"}. 
+        
+Please ensure your **VITE_OPENROUTER_API_KEY** is correctly set in your environment and that you have redeployed. 
+
+✨ **NUCLEUS_X Tip**: While we fix this, you can always **copy-paste** your problems or text directly into the chat for instant analysis!`,
+        timestamp: new Date()
       };
-      setMessages((prev) => [...prev, fallbackMsg]);
-      setError(null); // Clear error since we handled it gracefully
+      setMessages(prev => [...prev, errMsg]);
     } finally {
       setLoading(false);
     }
@@ -415,20 +398,13 @@ export default function AIAssistant() {
               <Sparkles className="w-8 h-8 text-primary mx-auto mb-3" />
               <h3 className="text-sm font-bold text-white mb-1 uppercase tracking-widest">Vision Feature Coming Soon</h3>
               <p className="text-[11px] text-white/50 leading-relaxed">
-                NUCLEUS_X Engine is currently indexing multi-modal data. Vision & PDF analysis will be unlocked in the next core update. ✨
+                NUCLEUS_X Engine is currently indexing multi-modal data. Vision & PDF analysis will be unlocked in the next update. 
+                <br /><br />
+                <span className="text-primary/80 font-mono text-[9px]">HINT: YOU CAN ALWAYS COPY-PASTE YOUR TEXT OR PROBLEMS DIRECTLY INTO THE CHAT! ✨</span>
               </p>
             </motion.div>
           )}
         </AnimatePresence>
-
-        {/* Dynamic Hint */}
-        <motion.div 
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 0.6 }}
-          className="max-w-3xl mx-auto mb-2 text-[10px] text-primary/80 uppercase tracking-widest font-mono text-center"
-        >
-          HINT: You can always copy-paste your text or problems here—I'll help you solve them instantly! ✨
-        </motion.div>
 
         <form onSubmit={handleSubmit} className="flex gap-3 max-w-3xl mx-auto relative group">
           <input 
