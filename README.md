@@ -17,11 +17,11 @@ Traditional chemical education and computational chemistry research often rely o
 
 ##  Core Features
 
-* ** The Atomic Viewer:** A fully interactive 118-element periodic table. Select an element to fetch real-world macroscopic images (via Wikipedia API), or dive into the quantum realm with interactive 3D Bohr models and Heisenberg Uncertainty Principle visualizers.
-* ** Spatial Virtual Laboratory:** A 3D interactive workbench featuring **MediaPipe Hand Tracking**. Users can literally raise their hand to the webcam, pinch to grab 3D chemical bottles, and pour them into the beaker. The underlying thermodynamic engine calculates real-time enthalpy ($\Delta H$) and molarity state changes.
-* ** Molecule Explorer:** Integrated with the **PubChem PUG REST API**. Search for any compound to fetch live SDF data and render manipulatable 3D ball-and-stick or space-filling models using `3Dmol.js`.
-* ** AI Lab Mentor:** An integrated, context-aware chatbot powered by **Gemini 2.0 Flash**. It provides real-time thermodynamic explanations, balances complex equations (with full Markdown support), and offers lab safety guidance based on what you are currently mixing in the virtual lab.
-* ** Crystal Lattice Engine:** A dedicated Three.js visualizer for solid-state chemistry, rendering unit cells (SC, BCC, FCC) to demonstrate atomic packing efficiency.
+* **The Atomic Viewer:** A fully interactive 118-element periodic table. Select an element to fetch real-world macroscopic images (via Wikipedia API), or dive into the quantum realm with interactive 3D Bohr models and Heisenberg Uncertainty Principle visualizers.
+* **Spatial Virtual Laboratory:** A 3D interactive workbench featuring **MediaPipe Hand Tracking**. Users can literally raise their hand to the webcam, pinch to grab 3D chemical bottles, and pour them into the beaker. The underlying thermodynamic engine calculates real-time enthalpy ($\Delta H$) and molarity state changes.
+* **Molecule Explorer:** Integrated with the **PubChem PUG REST API**. Search for any compound to fetch live SDF data and render manipulatable 3D ball-and-stick or space-filling models using `3Dmol.js`.
+* **AI Lab Mentor:** An integrated, context-aware chatbot powered by **Gemini 2.0 Flash**. It provides real-time thermodynamic explanations, balances complex equations (with full Markdown support), and offers lab safety guidance based on what you are currently mixing in the virtual lab.
+* **Crystal Lattice Engine:** A dedicated Three.js visualizer for solid-state chemistry, rendering unit cells (SC, BCC, FCC) to demonstrate atomic packing efficiency.
 
 ##  System Architecture & Tech Stack
 
