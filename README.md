@@ -13,7 +13,7 @@
 
 Traditional chemical education and computational chemistry research often rely on static, 2D representations of complex, 3D phenomena. This limits our intuitive understanding of quantum mechanics, molecular geometry, and thermodynamics. 
 
-**NUCLEUS** was built to bridge the gap between theoretical physics and interactive experimentation. By shifting heavy computational rendering to the browser via WebGL and integrating spatial computing, NUCLEUS delivers an immersive, high-fidelity chemistry lab directly to your screen—no proprietary desktop software or VR headsets required.
+**NUCLEUS** was built to bridge the gap between theoretical physics and interactive experimentation. By shifting heavy computational rendering to the browser via WebGL and integrating spatial computing, NUCLEUS delivers an immersive, high-fidelity chemistry lab directly to your screen and no proprietary desktop software or VR headsets required.
 
 ##  Core Features
 
