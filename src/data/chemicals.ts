@@ -34,6 +34,7 @@ export interface Reaction {
   smell?: string;          // Description of smell if any (H₂S, NH₃, etc.)
   observations?: string[]; // Physical observations ("White precipitate forms", "Effervescence observed", etc.)
   limitingReagentNote?: string;
+  stoichiometry?: Record<string, number>; // id -> coefficient (negative for reactants, positive for products)
 }
 
 export interface BeakerState {
@@ -119,6 +120,16 @@ export const chemicals: Chemical[] = [
   { id: "famous_salt_analysis", name: "Salt Analysis", formula: "AgNO₃+NaCl", color: "#f0f0ff", type: "neutral", category: "FAMOUS", volumeMl: 50, molarMass: 0, defaultMoles: 1.0, description: "Silver nitrate + NaCl yielding a white precipitate" },
   { id: "famous_elephant", name: "Elephant Toothpaste", formula: "H₂O₂+KI", color: "#ffeedd", type: "neutral", category: "FAMOUS", volumeMl: 50, molarMass: 0, defaultMoles: 1.0, description: "Simulates decomposition of hydrogen peroxide" },
   { id: "famous_volcano", name: "Baking Soda Volcano", formula: "NaHCO₃+Vinegar", color: "#ff6633", type: "neutral", category: "FAMOUS", volumeMl: 50, molarMass: 0, defaultMoles: 1.0, description: "Classic CO₂ eruption experiment" },
+  
+  // NEW PRODUCTS (for reaction logic)
+  { id: "co2", name: "Carbon Dioxide", formula: "CO₂", color: "#ffffff", type: "neutral", category: "NEUTRALS", volumeMl: 0, molarMass: 44.01, defaultMoles: 0, description: "Colorless gas" },
+  { id: "h2", name: "Hydrogen Gas", formula: "H₂", color: "#ffffff", type: "neutral", category: "NEUTRALS", volumeMl: 0, molarMass: 2.016, defaultMoles: 0, description: "Flammable gas" },
+  { id: "o2", name: "Oxygen Gas", formula: "O₂", color: "#ffffff", type: "neutral", category: "NEUTRALS", volumeMl: 0, molarMass: 31.998, defaultMoles: 0, description: "Supports combustion" },
+  { id: "zncl2", name: "Zinc Chloride", formula: "ZnCl₂", color: "#ffffff", type: "salt", category: "SALTS", volumeMl: 10, molarMass: 136.3, defaultMoles: 0.1, description: "Soluble zinc salt" },
+  { id: "mgcl2", name: "Magnesium Chloride", formula: "MgCl₂", color: "#ffffff", type: "salt", category: "SALTS", volumeMl: 10, molarMass: 95.21, defaultMoles: 0.1, description: "Soluble magnesium salt" },
+  { id: "agcl", name: "Silver Chloride", formula: "AgCl", color: "#ffffff", type: "salt", category: "SALTS", volumeMl: 5, molarMass: 143.32, defaultMoles: 0.1, description: "White precipitate" },
+  { id: "pbi2", name: "Lead(II) Iodide", formula: "PbI₂", color: "#ffff00", type: "salt", category: "SALTS", volumeMl: 5, molarMass: 461.01, defaultMoles: 0.1, description: "Yellow precipitate" },
+  { id: "feso4", name: "Iron(II) Sulfate", formula: "FeSO₄", color: "#aabbaa", type: "salt", category: "SALTS", volumeMl: 10, molarMass: 151.91, defaultMoles: 0.1, description: "Greenish salt" },
 ];
 
 // ============================================================
@@ -138,6 +149,7 @@ export const reactions: Reaction[] = [
     bubbles: false,
     observations: ["Solution warms up noticeably", "If phenolphthalein present: pink → colorless at endpoint"],
     limitingReagentNote: "1:1 molar ratio — limiting reagent is whichever has fewer moles",
+    stoichiometry: { hcl: -1, naoh: -1, nacl: 1, h2o: 1 },
   },
   {
     reactants: ["h2so4", "naoh"],
@@ -150,6 +162,7 @@ export const reactions: Reaction[] = [
     bubbles: false,
     observations: ["Strong exothermic neutralization", "Requires 2:1 NaOH:H₂SO₄ for complete neutralization"],
     limitingReagentNote: "1:2 molar ratio (H₂SO₄:NaOH)",
+    stoichiometry: { h2so4: -1, naoh: -2, na2so4: 1, h2o: 2 },
   },
   {
     reactants: ["hcl", "nahco3"],
@@ -199,6 +212,7 @@ export const reactions: Reaction[] = [
     bubbles: true,
     gasEvolved: "CO₂",
     observations: ["Effervescence from CO₂", "Double the gas compared to HCl+NaHCO₃"],
+    stoichiometry: { h2so4: -1, nahco3: -2, na2so4: 1, co2: 2, h2o: 2 },
   },
   {
     reactants: ["hcl", "na2co3"],
@@ -211,6 +225,7 @@ export const reactions: Reaction[] = [
     bubbles: true,
     gasEvolved: "CO₂",
     observations: ["Brisk effervescence"],
+    stoichiometry: { hcl: -2, na2co3: -1, nacl: 2, co2: 1, h2o: 1 },
   },
 
   // ── METAL DISPLACEMENT ──
@@ -225,6 +240,7 @@ export const reactions: Reaction[] = [
     bubbles: true,
     gasEvolved: "H₂",
     observations: ["Sodium skates on water surface", "Vigorous fizzing & hissing", "May catch fire with lilac/orange flame", "Solution becomes strongly alkaline"],
+    stoichiometry: { na: -2, h2o: -2, naoh: 2, h2: 1 },
   },
   {
     reactants: ["cuso4", "fe"],
@@ -249,6 +265,7 @@ export const reactions: Reaction[] = [
     bubbles: true,
     gasEvolved: "H₂",
     observations: ["Zinc granules dissolve gradually", "Steady stream of H₂ bubbles", "Solution warms slightly"],
+    stoichiometry: { zn: -1, hcl: -2, zncl2: 1, h2: 1 },
   },
   {
     reactants: ["mg", "hcl"],
@@ -261,6 +278,7 @@ export const reactions: Reaction[] = [
     bubbles: true,
     gasEvolved: "H₂",
     observations: ["Very vigorous reaction", "Magnesium dissolves rapidly", "Solution heats up significantly"],
+    stoichiometry: { mg: -1, hcl: -2, mgcl2: 1, h2: 1 },
   },
   {
     reactants: ["fe", "h2so4"],

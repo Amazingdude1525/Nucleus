@@ -120,105 +120,152 @@ export default function VirtualLab() {
 
   const handleAddChemical = useCallback(
     (chem: Chemical) => {
-      let newContents = [...beakerContents];
-      
-      // Auto-inject water if a FAMOUS test is added to an empty beaker
-      if (beakerContents.length === 0 && chem.category === "FAMOUS") {
-        const h2o = getChemicalsByCategory("WATER").find(c => c.id === "h2o")!;
-        newContents.push({ chemical: h2o, moles: h2o.defaultMoles, addedAt: Date.now() });
-        addLog(`Auto-added ${h2o.formula} base for ${chem.name}`, "info");
-      }
-
-      const newEntry = { chemical: chem, moles: chem.defaultMoles, addedAt: Date.now() };
-      newContents.push(newEntry);
-      setBeakerContents(newContents);
-
-      // Thermal equilibrium calculation before any reaction
+      let currentContents = [...beakerContents];
+      const addedMoles = chem.defaultMoles;
       const addedVolume = chem.volumeMl;
       const addedTemp = chem.id === "h2o_ice" ? 0 : chem.id === "h2o_hot" ? 80 : 25;
       
+      // Auto-inject water if a FAMOUS test is added to an empty beaker
+      if (currentContents.length === 0 && chem.category === "FAMOUS") {
+        const h2o = getChemicalsByCategory("WATER").find(c => c.id === "h2o")!;
+        currentContents.push({ chemical: h2o, moles: h2o.defaultMoles, addedAt: Date.now() });
+        addLog(`Auto-added ${h2o.formula} base for ${chem.name}`, "info");
+      }
+
+      // Add the chemical to beaker (merge if already exists)
+      const existingEntry = currentContents.find(c => c.chemical.id === chem.id);
+      if (existingEntry) {
+        existingEntry.moles += addedMoles;
+      } else {
+        currentContents.push({ chemical: chem, moles: addedMoles, addedAt: Date.now() });
+      }
+
+      // Thermal equilibrium calculation for the addition
+      const oldVolume = totalVolumeMl;
+      const newTotalVolume = oldVolume + addedVolume;
       setTemperature((prev) => {
-        if (totalVolumeMl === 0) return addedTemp;
-        const equilibriumTemp = ((prev * totalVolumeMl) + (addedTemp * addedVolume)) / (totalVolumeMl + addedVolume);
-        return equilibriumTemp;
+        if (oldVolume === 0) return addedTemp;
+        return ((prev * oldVolume) + (addedTemp * addedVolume)) / newTotalVolume;
       });
 
-      // Update liquid color (blend toward new chemical's color)
       setLiquidColor(chem.color);
+      addLog(`Added ${addedMoles} mol ${chem.formula} (${addedVolume}mL) at ${addedTemp}°C`, "add");
 
-      addLog(`Added ${chem.defaultMoles} mol ${chem.formula} (${chem.volumeMl}mL) at ${addedTemp}°C`, "add");
+      // Reaction Processing
+      let reactionFound: Reaction | undefined;
+      let reactionExtent = 0;
 
-      // Check for reaction with previously added chemicals
-      for (const existing of beakerContents) {
+      // Check for reactions with ALL other chemicals
+      for (const existing of currentContents) {
+        if (existing.chemical.id === chem.id) continue;
+
         const reaction = findReaction(existing.chemical.id, chem.id);
         if (reaction) {
-          setTimeout(() => {
-            setLiquidColor(reaction.productColor);
-            setShowBubbles(reaction.bubbles);
+          reactionFound = reaction;
+          
+          // Use stoichiometry if defined, otherwise default to 1:1
+          const stoich = reaction.stoichiometry || {
+            [existing.chemical.id]: -1,
+            [chem.id]: -1
+          };
 
-            // THERMODYNAMIC CALCULATION
-            const limitingMoles = Math.min(existing.moles, chem.defaultMoles);
-            const newVolume = totalVolumeMl + chem.volumeMl;
-            const deltaT = calculateTemperatureChange(reaction.deltaH, limitingMoles, newVolume);
+          // Calculate limiting reagent and extent of reaction
+          // reactionExtent = min(moles_available / |coefficient|) for all reactants
+          const reactantEntries = Object.entries(stoich).filter(([_, coeff]) => coeff < 0);
+          let minExtent = Infinity;
 
-            setTemperature((prev) => {
-              const newTemp = Math.max(0, Math.min(prev + deltaT, 200));
-              return newTemp;
-            });
-            setLastDeltaH(reaction.deltaH);
-
-            if (reaction.deltaH < 0) {
-              setHeatGlow(true);
-              addLog(
-                `🔥 Exothermic: ΔH = ${reaction.deltaH.toFixed(1)} kJ/mol → ΔT ≈ +${deltaT.toFixed(1)}°C`,
-                "info"
-              );
-            } else if (reaction.deltaH > 0) {
-              addLog(
-                `❄️ Endothermic: ΔH = +${reaction.deltaH.toFixed(1)} kJ/mol → ΔT ≈ ${deltaT.toFixed(1)}°C`,
-                "info"
-              );
+          reactantEntries.forEach(([id, coeff]) => {
+            const contentItem = currentContents.find(c => c.chemical.id === id);
+            if (contentItem) {
+              const possibleExtent = contentItem.moles / Math.abs(coeff);
+              if (possibleExtent < minExtent) minExtent = possibleExtent;
+            } else {
+              minExtent = 0;
             }
+          });
 
-            // Reaction log entry with full info: reagents → products → ΔH → state
-            const state = reaction.deltaH < 0 ? "Exothermic" : reaction.deltaH > 0 ? "Endothermic" : "Isothermal";
-            addLog(
-              `⚗️ ${existing.chemical.formula} + ${chem.formula} → ${reaction.productFormula} | ΔH=${reaction.deltaH.toFixed(1)} kJ/mol | ${state}`,
-              "reaction"
-            );
-            
-            if (reaction.limitingReagentNote) {
-              addLog(`📊 Limiting reagent: ${reaction.limitingReagentNote}`, "info");
+          reactionExtent = minExtent;
+
+          // Apply stoichiometry (consume reactants, add products)
+          Object.entries(stoich).forEach(([id, coeff]) => {
+            if (coeff < 0) {
+              const toConsume = Math.abs(coeff) * reactionExtent;
+              const item = currentContents.find(c => c.chemical.id === id);
+              if (item) item.moles = Math.max(0, item.moles - toConsume);
+            } else {
+              const toProduce = coeff * reactionExtent;
+              const productChem = chemicals.find(c => c.id === id);
+              if (productChem) {
+                const existingProduct = currentContents.find(c => c.chemical.id === id);
+                if (existingProduct) {
+                  existingProduct.moles += toProduce;
+                } else {
+                  currentContents.push({ chemical: productChem, moles: toProduce, addedAt: Date.now() });
+                }
+              }
             }
+          });
 
-            if (reaction.gasEvolved) {
-              addLog(`Gas evolved: ${reaction.gasEvolved}↑ — bubbles observed`, "info");
-            }
-
-            // Smell alert
-            if (reaction.smell) {
-              setSmellAlert(reaction.smell);
-              setTimeout(() => setSmellAlert(null), 6000);
-            }
-
-            // Physical observations
-            if (reaction.observations && reaction.observations.length > 0) {
-              setObservations(reaction.observations);
-              reaction.observations.forEach((obs) => {
-                addLog(`🔍 ${obs}`, "info");
-              });
-              setTimeout(() => setObservations([]), 10000);
-            }
-          }, 600);
-
-          // Clear transient effects after a while
-          setTimeout(() => {
-            setShowBubbles(false);
-            setHeatGlow(false);
-          }, 8000);
-
-          break;
+          break; // Process one reaction per addition for stability
         }
+      }
+
+      // State Cleanup: Remove chemicals with negligible moles
+      const cleanedContents = currentContents.filter(c => c.moles > 0.0001);
+      setBeakerContents(cleanedContents);
+
+      // Handle Reaction Effects
+      if (reactionFound && reactionExtent > 0) {
+        const r = reactionFound;
+        const extent = reactionExtent;
+
+        setTimeout(() => {
+          setLiquidColor(r.productColor);
+          setShowBubbles(r.bubbles);
+
+          // THERMODYNAMIC CALCULATION based on actual moles reacted
+          // deltaH is per mol of reaction extent
+          const deltaT = calculateTemperatureChange(r.deltaH, extent, newTotalVolume);
+          
+          setTemperature((prev) => {
+            const newTemp = Math.max(0, Math.min(prev + deltaT, 200));
+            return newTemp;
+          });
+          setLastDeltaH(r.deltaH);
+
+          if (r.deltaH < 0) {
+            setHeatGlow(true);
+            addLog(`🔥 Exothermic: ΔH = ${r.deltaH.toFixed(1)} kJ/mol → ΔT ≈ +${deltaT.toFixed(1)}°C`, "info");
+          } else if (r.deltaH > 0) {
+            addLog(`❄️ Endothermic: ΔH = +${r.deltaH.toFixed(1)} kJ/mol → ΔT ≈ ${deltaT.toFixed(1)}°C`, "info");
+          }
+
+          addLog(`⚗️ ${r.description} | Extent: ${extent.toFixed(3)} mol`, "reaction");
+          
+          if (r.limitingReagentNote) {
+            addLog(`📊 Stoichiometry: ${r.limitingReagentNote}`, "info");
+          }
+
+          if (r.gasEvolved) {
+            addLog(`Gas evolved: ${r.gasEvolved}↑ — bubbles observed`, "info");
+          }
+
+          if (r.smell) {
+            setSmellAlert(r.smell);
+            setTimeout(() => setSmellAlert(null), 6000);
+          }
+
+          if (r.observations && r.observations.length > 0) {
+            setObservations(r.observations);
+            r.observations.forEach((obs) => addLog(`🔍 ${obs}`, "info"));
+            setTimeout(() => setObservations([]), 10000);
+          }
+        }, 600);
+
+        setTimeout(() => {
+          setShowBubbles(false);
+          setHeatGlow(false);
+        }, 8000);
       }
     },
     [beakerContents, totalVolumeMl, addLog]
