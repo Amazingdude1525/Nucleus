@@ -1,0 +1,26 @@
+name: Code Quality Check
+
+on:
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  lint-and-typecheck:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/checkout@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm install  # Use 'bun install' if your environment supports it
+
+      - name: Run Lint
+        run: npm run lint
+
+      - name: Type check (TypeScript)
+        run: npm run type-check # Ensure this script exists in your package.json
