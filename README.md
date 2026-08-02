@@ -39,3 +39,5 @@ NUCLEUS is engineered for performance, utilizing a modern frontend stack to hand
 * Node.js (v18 or higher recommended)
 * npm or yarn
 
+> **Note:** Verify your Node.js version with `node --version` before installing dependencies to ensure it meets the recommended version.
+
